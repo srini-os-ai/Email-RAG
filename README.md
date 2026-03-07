@@ -52,8 +52,11 @@ ollama pull nomic-embed-text
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
+
+> zsh note: quote `'.[dev]'` so the shell does not treat `[]` as a glob pattern.
+
 
 ## Ingest
 ```bash
