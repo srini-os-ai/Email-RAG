@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import threading
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+try:
+    from fastapi import BackgroundTasks, FastAPI, HTTPException
+except (ModuleNotFoundError, ImportError):  # offline test fallback
+    from app.fastapi_compat import BackgroundTasks, FastAPI, HTTPException
 
 from app.answer import AnswerGenerator, answer_coverage
 from app.config import settings

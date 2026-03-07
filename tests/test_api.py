@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+try:
+    from fastapi.testclient import TestClient
+except (ModuleNotFoundError, ImportError):
+    from app.fastapi_compat import TestClient
 
 from app.api import main as api_main
 from app.db import connect, init_db

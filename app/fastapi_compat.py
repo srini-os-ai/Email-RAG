@@ -94,6 +94,7 @@ def _call_route(fn, json_body=None):
 
 class TestClient:
     __test__ = False
+
     def __init__(self, app: FastAPI):
         self.app = app
 
