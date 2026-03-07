@@ -6,7 +6,7 @@ Local MVP app to ingest one mailbox and search/ask questions over emails with **
 - Python 3.10+
 - FastAPI
 - Streamlit
-- Ollama (`llama3.1:8b-instruct`, `nomic-embed-text`)
+- Ollama (`llama3.1:8b`, `nomic-embed-text`)
 - SQLite (metadata + local vector store)
 
 ## Features
@@ -31,8 +31,19 @@ brew services start ollama
 ```
 
 ### 2) Pull required models
+
+You can browse the latest available models/tags in the Ollama library:
+- <https://ollama.com/library>
+
+Useful local checks:
 ```bash
-ollama pull llama3.1:8b-instruct
+ollama list
+ollama show llama3.1:8b
+```
+
+Then pull the models used by this MVP:
+```bash
+ollama pull llama3.1:8b
 ollama pull nomic-embed-text
 ```
 
