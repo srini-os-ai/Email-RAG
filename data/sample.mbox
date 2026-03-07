@@ -1,0 +1,13 @@
+From alice@example.com Sat Jan  1 00:00:00 2026
+Subject: Project kickoff timeline
+From: Alice <alice@example.com>
+Date: Sat, 01 Jan 2026 09:00:00 -0500
+
+Let's kick off the email-rag-mvp project this week. Milestone one is ingestion.
+
+From bob@example.com Sat Jan  2 00:00:00 2026
+Subject: Indexing update
+From: Bob <bob@example.com>
+Date: Sun, 02 Jan 2026 10:00:00 -0500
+
+Incremental indexing works with append-only mailbox data and tracks offsets.
