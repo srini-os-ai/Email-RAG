@@ -96,3 +96,7 @@ pytest -q
 - Single mailbox focus for MVP.
 - Vector search is local SQLite + cosine in Python over stored vectors (no cloud dependency).
 - If Ollama is down, ingestion/query still work via deterministic local embedding fallback.
+
+## Documentation
+- Detailed setup/run guide: `docs/GETTING_STARTED.md`
+- Product/architecture baseline + roadmap: `docs/SPEC.md`
