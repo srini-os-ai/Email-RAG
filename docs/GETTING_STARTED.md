@@ -8,8 +8,7 @@ This guide gets you from zero to a working local email-search MVP on Mac.
 - Builds local metadata + vector index in SQLite
 - Lets you:
   - **Search**: original emails shown first
-  - **Ask**: original emails first + LLM answer shown second
-- Computes confidence per hit + overall answer confidence
+- Computes confidence per hit + overall confidence
 - Tracks ingestion progress and ETA
 - Supports append-only incremental indexing
 
@@ -32,7 +31,7 @@ brew services start ollama
 ### 2.2 Pull local models
 
 ```bash
-ollama pull llama3.1:8b-instruct
+ollama pull llama3.1:8b
 ollama pull nomic-embed-text
 ```
 
@@ -43,7 +42,7 @@ cd ~/Projects/email-rag-mvp
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 ## 3) Add your mailbox data
@@ -111,7 +110,7 @@ Expected baseline currently: all tests pass.
 ```json
 {
   "query": "emails about quarterly planning",
-  "mode": "ask",
+  "mode": "search",
   "top_k": 5
 }
 ```
@@ -137,6 +136,18 @@ If API/UI ports are occupied, stop existing process and restart.
 
 - First run is expected to take longer.
 - Incremental runs should be faster (append-only path).
+
+### Rebuild embeddings from scratch
+
+```bash
+rm -f data/email_rag.db
+python scripts/ingest.py --source data/mailbox.mbox --type mbox
+```
+
+### Confirm which embedding backend is being used
+
+- Check `GET /ingest/status` fields: `embedding_backend`, `embedding_model`
+- Query responses from `POST /query` also include `embedding_backend` and `embedding_model`
 
 ## 9) Where to look next
 

@@ -7,7 +7,7 @@ import streamlit as st
 
 
 API_BASE = st.sidebar.text_input("API Base URL", value="http://127.0.0.1:8000")
-page = st.sidebar.radio("Page", ["Ingest", "Search", "Ask"])
+page = st.sidebar.radio("Page", ["Ingest", "Search"])
 
 st.title("Email RAG MVP")
 
@@ -28,9 +28,9 @@ def show_results(data: dict) -> None:
             cols[2].metric("Confidence", f"{r['confidence']:.2f}")
             render_confidence(r["confidence"])
 
-    if data.get("answer"):
-        st.subheader("LLM Answer (Secondary)")
-        st.write(data["answer"])
+    st.caption(
+        f"Embedding backend: {data.get('embedding_backend', 'unknown')} | model: {data.get('embedding_model', 'unknown')}"
+    )
 
     st.subheader("Overall Confidence")
     render_confidence(data.get("overall_confidence", 0.0))
@@ -57,6 +57,9 @@ if page == "Ingest":
     try:
         status = requests.get(f"{API_BASE}/ingest/status", timeout=10).json()
         st.json(status)
+        st.caption(
+            f"Embedding backend: {status.get('embedding_backend', 'unknown')} | model: {status.get('embedding_model', 'unknown')}"
+        )
         total = max(1, status.get("total_bytes", 1))
         done = status.get("processed_bytes", 0)
         st.progress(min(100, int(done * 100 / total)), text=f"ETA: {status.get('eta_seconds', 0)}s")
@@ -73,22 +76,6 @@ elif page == "Search":
             json={"query": query, "mode": "search", "top_k": top_k},
             timeout=30,
         )
-        if resp.ok:
-            show_results(resp.json())
-        else:
-            st.error(resp.text)
-
-else:
-    st.header("Ask Questions")
-    query = st.text_area("Question")
-    top_k = st.slider("Top K", 1, 20, 5)
-    if st.button("Ask") and query.strip():
-        with st.spinner("Thinking..."):
-            resp = requests.post(
-                f"{API_BASE}/query",
-                json={"query": query, "mode": "ask", "top_k": top_k},
-                timeout=60,
-            )
         if resp.ok:
             show_results(resp.json())
         else:

@@ -1,6 +1,6 @@
 # email-rag-mvp
 
-Local MVP app to ingest one mailbox and search/ask questions over emails with **original emails as primary results** and **LLM response as secondary**.
+Local MVP app to ingest one mailbox and search emails with **original emails as primary results**.
 
 ## Stack
 - Python 3.10+
@@ -12,8 +12,9 @@ Local MVP app to ingest one mailbox and search/ask questions over emails with **
 ## Features
 - Incremental indexing for append-only mailbox data (`processed_offset` tracking)
 - Ingestion progress endpoint with ETA estimate (sample-based + live throughput)
-- Confidence meter per result and overall answer confidence
+- Confidence meter per result and overall confidence
 - Local retrieval pipeline with SQLite vector storage
+- Embedding debug visibility in API/UI (backend + model in use)
 - Fallback local hash embedding if Ollama is unavailable
 
 ## Project Structure
@@ -76,7 +77,6 @@ streamlit run scripts/streamlit_app.py
 UI pages:
 - Ingest
 - Search
-- Ask
 
 ## API Endpoints
 - `GET /health`
@@ -86,7 +86,7 @@ UI pages:
 
 ### Query behavior
 - `mode=search`: returns email matches only
-- `mode=ask`: returns email matches + LLM answer
+- query responses include `embedding_backend` + `embedding_model` for debugging
 
 Original emails are always returned as the primary evidence.
 
@@ -94,8 +94,8 @@ Original emails are always returned as the primary evidence.
 Deterministic confidence for each result:
 - `result_confidence = 0.7 * retrieval_score + 0.3 * evidence_coverage`
 
-Overall answer confidence:
-- `overall_confidence = 0.8 * average(result_confidences) + 0.2 * answer_coverage`
+Overall confidence:
+- `overall_confidence = average(result_confidences)`
 
 ## ETA Estimation
 - Initial estimate: sample mailbox bytes -> estimate messages remaining
@@ -105,6 +105,17 @@ Overall answer confidence:
 ```bash
 pytest -q
 ```
+
+## Clear existing index (for re-embedding tests)
+
+If you want to rebuild embeddings from scratch (for example after changing embedding model), delete the local DB and re-ingest:
+
+```bash
+rm -f data/email_rag.db
+python scripts/ingest.py --source data/sample.mbox --type mbox
+```
+
+If your data is elsewhere, keep the same command but point `--source` to your mailbox path.
 
 ## Notes
 - Single mailbox focus for MVP.

@@ -7,7 +7,6 @@ try:
 except (ModuleNotFoundError, ImportError):  # offline test fallback
     from app.fastapi_compat import BackgroundTasks, FastAPI, HTTPException
 
-from app.answer import AnswerGenerator, answer_coverage
 from app.config import settings
 from app.db import connect, get_latest_ingest_job, init_db
 from app.embedding import Embedder
@@ -60,6 +59,8 @@ def ingest_status():
             throughput_eps=0.0,
             eta_seconds=0.0,
             message="no ingestion job yet",
+            embedding_backend=None,
+            embedding_model=None,
         )
     return IngestStatusResponse(
         job_id=latest["id"],
@@ -75,6 +76,8 @@ def ingest_status():
         throughput_eps=latest["throughput_eps"],
         eta_seconds=latest["eta_seconds"],
         message=latest["message"],
+        embedding_backend=latest.get("embedding_backend"),
+        embedding_model=latest.get("embedding_model"),
     )
 
 
@@ -82,7 +85,7 @@ def ingest_status():
 def query(payload: QueryRequest):
     top_k = payload.top_k or settings.retrieval_top_k
     embedder = Embedder()
-    qvec = embedder.embed(payload.query)
+    qvec, backend, model = embedder.embed_with_info(payload.query)
     rows = retrieve(_conn, qvec, payload.query, top_k=top_k)
     result_models: list[SearchResult] = []
     for row in rows:
@@ -100,19 +103,13 @@ def query(payload: QueryRequest):
             )
         )
 
-    answer = None
-    a_cov = 0.0
-    if payload.mode == "ask":
-        ans = AnswerGenerator()
-        contexts = rows[: settings.max_answer_context]
-        answer = ans.answer(payload.query, contexts)
-        a_cov = answer_coverage(payload.query, answer or "")
-
-    o_conf = overall_confidence([r.confidence for r in result_models], a_cov)
+    o_conf = overall_confidence([r.confidence for r in result_models], 0.0)
     return QueryResponse(
         query=payload.query,
-        mode=payload.mode,
+        mode="search",
         results=result_models,
-        answer=answer,
+        answer=None,
         overall_confidence=round(o_conf, 4),
+        embedding_backend=backend,
+        embedding_model=model,
     )

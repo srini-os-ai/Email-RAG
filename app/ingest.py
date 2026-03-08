@@ -9,6 +9,7 @@ from email import policy
 from email.parser import BytesParser
 from pathlib import Path
 
+from app.config import settings
 from app.db import (
     create_ingest_job,
     finish_ingest_job,
@@ -123,6 +124,8 @@ def ingest_source(conn, source_path: str, source_type: str = "mbox") -> int:
             else _parse_text_file(new_bytes, offset)
         )
 
+        embedding_backend = "unknown"
+        embedding_model = settings.embed_model
         processed = 0
         for item in parsed:
             body = item["body"].strip()
@@ -144,7 +147,7 @@ def ingest_source(conn, source_path: str, source_type: str = "mbox") -> int:
                 body_hash=digest,
             )
             if email_id is not None:
-                vector = embedder.embed(
+                vector, embedding_backend, embedding_model = embedder.embed_with_info(
                     f"Subject: {item['subject']}\nFrom: {item['sender']}\nDate: {item['date']}\n{body}"
                 )
                 upsert_embedding(conn, email_id, vector)
@@ -164,6 +167,8 @@ def ingest_source(conn, source_path: str, source_type: str = "mbox") -> int:
                 throughput_eps=round(throughput, 3),
                 eta_seconds=round(eta, 1),
                 message="indexing",
+                embedding_backend=embedding_backend,
+                embedding_model=embedding_model,
             )
 
         new_offset = offset + len(new_bytes)
@@ -176,6 +181,8 @@ def ingest_source(conn, source_path: str, source_type: str = "mbox") -> int:
             throughput_eps=round(processed / max(0.001, time.time() - started), 3),
             eta_seconds=0.0,
             message="completed",
+            embedding_backend=embedding_backend,
+            embedding_model=embedding_model,
         )
         finish_ingest_job(conn, job_id, "completed", f"indexed {processed} new emails")
         return job_id

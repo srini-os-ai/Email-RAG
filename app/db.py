@@ -82,10 +82,20 @@ def init_db(conn: sqlite3.Connection) -> None:
                 total_bytes INTEGER NOT NULL DEFAULT 0,
                 throughput_eps REAL NOT NULL DEFAULT 0,
                 eta_seconds REAL NOT NULL DEFAULT 0,
-                message TEXT NOT NULL DEFAULT ''
+                message TEXT NOT NULL DEFAULT '',
+                embedding_backend TEXT,
+                embedding_model TEXT
             )
             """
         )
+
+        cols = {
+            row["name"] for row in conn.execute("PRAGMA table_info(ingest_jobs)").fetchall()
+        }
+        if "embedding_backend" not in cols:
+            conn.execute("ALTER TABLE ingest_jobs ADD COLUMN embedding_backend TEXT")
+        if "embedding_model" not in cols:
+            conn.execute("ALTER TABLE ingest_jobs ADD COLUMN embedding_model TEXT")
 
 
 def get_mailbox_state(conn: sqlite3.Connection, source_path: str, source_type: str) -> dict:

@@ -38,11 +38,12 @@ def result_confidence(retrieval_score: float, coverage_score: float) -> float:
     return max(0.0, min(1.0, 0.7 * retrieval_score + 0.3 * coverage_score))
 
 
-def overall_confidence(result_confidences: list[float], answer_coverage: float) -> float:
+def overall_confidence(result_confidences: list[float], answer_coverage: float = 0.0) -> float:
+    del answer_coverage  # retained for backward call compatibility
     if not result_confidences:
         return 0.0
     base = sum(result_confidences) / len(result_confidences)
-    return max(0.0, min(1.0, 0.8 * base + 0.2 * answer_coverage))
+    return max(0.0, min(1.0, base))
 
 
 def retrieve(conn, query_embedding: list[float], query: str, top_k: int = 5) -> list[dict]:

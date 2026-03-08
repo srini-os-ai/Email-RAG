@@ -47,8 +47,8 @@ class QueryRequest:
     @classmethod
     def from_dict(cls, data: dict):
         mode = data.get("mode", "search")
-        if mode not in {"search", "ask"}:
-            raise ValueError("mode must be search or ask")
+        if mode != "search":
+            raise ValueError("mode must be search")
         query = (data.get("query") or "").strip()
         if not query:
             raise ValueError("query is required")
@@ -66,6 +66,8 @@ class QueryResponse:
     results: list[SearchResult]
     answer: str | None
     overall_confidence: float
+    embedding_backend: str
+    embedding_model: str
 
     def model_dump(self):
         out = asdict(self)
@@ -88,6 +90,8 @@ class IngestStatusResponse:
     throughput_eps: float
     eta_seconds: float
     message: str
+    embedding_backend: str | None = None
+    embedding_model: str | None = None
 
     def model_dump(self):
         return asdict(self)

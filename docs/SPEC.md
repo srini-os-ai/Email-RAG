@@ -8,7 +8,7 @@ This document captures:
 2. **What was built in MVP v0**
 3. **What we want next** (roadmap)
 
-Primary user requirement: **show original email results first; LLM response is secondary**.
+Primary user requirement: **show original email results first**.
 
 ---
 
@@ -17,8 +17,8 @@ Primary user requirement: **show original email results first; LLM response is s
 Need a local Mac app/service that can:
 
 - ingest large local email datasets (starting with one mailbox)
-- answer user questions over that corpus
-- keep answers trustworthy by prioritizing original source emails
+- find relevant emails quickly over that corpus
+- keep results trustworthy by prioritizing original source emails
 - support incremental append-only updates
 - expose confidence and ingestion ETA/progress
 
@@ -37,9 +37,8 @@ Privacy-first: local-first stack, no cloud dependency required for core operatio
 - Local storage/indexing:
   - SQLite metadata tables
   - local vector storage + cosine retrieval path
-- Query modes:
+- Query mode:
   - Search mode (email evidence results)
-  - Ask mode (email evidence + secondary LLM answer)
 - Confidence:
   - per-result confidence
   - overall answer confidence
@@ -64,8 +63,7 @@ Privacy-first: local-first stack, no cloud dependency required for core operatio
 ```text
 Streamlit UI
   ├─ Ingest page
-  ├─ Search page
-  └─ Ask page
+  └─ Search page
       │
       ▼
 FastAPI service
@@ -77,9 +75,8 @@ FastAPI service
       ▼
 Core modules (app/)
   ├─ ingest.py      (parse + incremental ingest + progress)
-  ├─ embedding.py   (ollama embeddings + local fallback)
+  ├─ embedding.py   (ollama embeddings + local fallback + backend debug)
   ├─ retrieval.py   (vector retrieval + scoring)
-  ├─ answer.py      (LLM answer as secondary output)
   ├─ db.py          (SQLite schema/access)
   └─ api/main.py    (HTTP endpoints)
 ```
@@ -92,7 +89,7 @@ Core modules (app/)
 
 1. Retrieval returns top evidence emails/chunks
 2. UI/API returns these as primary results
-3. LLM synthesis is generated after evidence retrieval and shown as secondary
+3. API/UI expose embedding backend + model for retrieval debugging
 
 ### Confidence (deterministic)
 
@@ -100,9 +97,9 @@ Per result:
 
 - `result_confidence = 0.7 * retrieval_score + 0.3 * evidence_coverage`
 
-Overall answer:
+Overall:
 
-- `overall_confidence = 0.8 * avg(result_confidence) + 0.2 * answer_coverage`
+- `overall_confidence = avg(result_confidence)`
 
 ---
 
@@ -162,8 +159,8 @@ Done =
 
 1. local install works on Mac with Ollama
 2. can ingest one mailbox
-3. can search and ask
-4. originals shown first, LLM answer second
+3. can search
+4. originals shown first
 5. confidence + ETA visible
 6. tests pass
 7. code committed
