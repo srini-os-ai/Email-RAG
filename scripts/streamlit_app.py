@@ -31,6 +31,11 @@ def show_results(data: dict) -> None:
     st.caption(
         f"Embedding backend: {data.get('embedding_backend', 'unknown')} | model: {data.get('embedding_model', 'unknown')}"
     )
+    if data.get("rewritten_query"):
+        st.caption(f"Rewritten query: {data.get('rewritten_query')}")
+    if data.get("llm_prompt_used"):
+        with st.expander("LLM prompt used for query rewrite"):
+            st.code(data.get("llm_prompt_used"), language="text")
 
     st.subheader("Overall Confidence")
     render_confidence(data.get("overall_confidence", 0.0))

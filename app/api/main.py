@@ -13,6 +13,7 @@ from app.embedding import Embedder
 from app.ingest import ingest_source
 from app.models import IngestStartRequest, IngestStatusResponse, QueryRequest, QueryResponse, SearchResult
 from app.retrieval import overall_confidence, retrieve
+from app.query_rewrite import QueryRewriter
 
 
 app = FastAPI(title="email-rag-mvp", version="0.1.0")
@@ -84,9 +85,15 @@ def ingest_status():
 @app.post("/query", response_model=QueryResponse)
 def query(payload: QueryRequest):
     top_k = payload.top_k or settings.retrieval_top_k
+    query_text = payload.query
+    rewrite_prompt = None
+    if settings.rewrite_enabled:
+        rewriter = QueryRewriter()
+        query_text, rewrite_prompt = rewriter.rewrite(payload.query)
+
     embedder = Embedder()
-    qvec, backend, model = embedder.embed_with_info(payload.query)
-    rows = retrieve(_conn, qvec, payload.query, top_k=top_k)
+    qvec, backend, model = embedder.embed_with_info(query_text)
+    rows = retrieve(_conn, qvec, query_text, top_k=top_k)
     result_models: list[SearchResult] = []
     for row in rows:
         result_models.append(
@@ -112,4 +119,6 @@ def query(payload: QueryRequest):
         overall_confidence=round(o_conf, 4),
         embedding_backend=backend,
         embedding_model=model,
+        rewritten_query=query_text,
+        llm_prompt_used=rewrite_prompt,
     )

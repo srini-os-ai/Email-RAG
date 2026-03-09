@@ -13,8 +13,9 @@ Local MVP app to ingest one mailbox and search emails with **original emails as 
 - Incremental indexing for append-only mailbox data (`processed_offset` tracking)
 - Ingestion progress endpoint with ETA estimate (sample-based + live throughput)
 - Confidence meter per result and overall confidence
+- Query rewriting via LLM system prompt before retrieval (configurable)
 - Local retrieval pipeline with SQLite vector storage
-- Embedding debug visibility in API/UI (backend + model in use)
+- Embedding + rewrite debug visibility in API/UI (backend/model, rewritten query, rewrite prompt)
 - Fallback local hash embedding if Ollama is unavailable
 
 ## Project Structure
@@ -64,6 +65,14 @@ pip install -e '.[dev]'
 python scripts/ingest.py --source data/sample.mbox --type mbox
 ```
 
+## Query rewrite configuration (optional)
+
+```bash
+export EMAIL_RAG_REWRITE_ENABLED=1
+export EMAIL_RAG_REWRITE_MODEL=llama3.1:8b
+export EMAIL_RAG_REWRITE_SYSTEM_PROMPT="You are a search-query rewriting assistant..."
+```
+
 ## Run API
 ```bash
 ./scripts/run_api.sh
@@ -86,7 +95,10 @@ UI pages:
 
 ### Query behavior
 - `mode=search`: returns email matches only
-- query responses include `embedding_backend` + `embedding_model` for debugging
+- query responses include:
+  - `embedding_backend` + `embedding_model`
+  - `rewritten_query`
+  - `llm_prompt_used` (query-rewrite prompt sent to LLM)
 
 Original emails are always returned as the primary evidence.
 

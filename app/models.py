@@ -68,6 +68,8 @@ class QueryResponse:
     overall_confidence: float
     embedding_backend: str
     embedding_model: str
+    rewritten_query: str | None = None
+    llm_prompt_used: str | None = None
 
     def model_dump(self):
         out = asdict(self)
